@@ -1,0 +1,74 @@
+name: TLSN Plugin Compiler Pipeline
+
+on:
+  workflow_dispatch:  # Allows manual trigger for testing
+  repository_dispatch:  # Triggered by external POST request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Show current directory and files (initial)
+        run: |
+          echo "Current working directory:"
+          pwd
+          echo "Directory structure:"
+          ls -la
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Replace files with incoming payload
+        if: github.event.client_payload != null
+        run: |
+          # Ensure directories exist
+          mkdir -p src/utils
+
+          # Replace config.json
+          echo "${{ github.event.client_payload['config.json'] }}" | base64 -d > config.json
+          echo "Replaced config.json:"
+          cat config.json
+
+          # Replace index.d.ts
+          echo "${{ github.event.client_payload['index.d.ts'] }}" | base64 -d > src/index.d.ts
+          echo "Replaced src/index.d.ts:"
+          cat src/index.d.ts
+
+          # Replace index.ts
+          echo "${{ github.event.client_payload['index.ts'] }}" | base64 -d > src/index.ts
+          echo "Replaced src/index.ts:"
+          cat src/index.ts
+
+          # Debugging: Show updated directory structure
+          echo "Directory structure after replacing files:"
+          ls -la
+          echo "Tree structure:"
+          sudo apt-get install -y tree
+          tree .
+
+      - name: Install Extism
+        run: |
+          curl -O https://raw.githubusercontent.com/extism/js-pdk/main/install.sh
+          chmod +x install.sh
+          ./install.sh
+          echo "Installed Extism."
+
+      - name: Install dependencies and build project
+        run: |
+          npm install
+          npm run build
+          echo "Build complete."
+          echo "Contents of src/index.ts (post-build):"
+          cat src/index.ts
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifact
+          path: ./dist/*.wasm

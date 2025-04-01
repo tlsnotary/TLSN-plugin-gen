@@ -1,0 +1,17 @@
+{
+  "name": "tlsnotary_website_plugin",
+  "version": "1.0.0",
+  "description": "WASM TLSNotary plugin to notarize the users website",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "node esbuild.js"
+  },
+  "keywords": [],
+  "author": "TLSNotary",
+  "license": "MIT",
+  "devDependencies": {
+    "@extism/js-pdk": "^1.0.1",
+    "esbuild": "^0.19.6",
+    "typescript": "^5.3.2"
+  }
+}
